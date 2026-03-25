@@ -364,6 +364,23 @@
     }
     .buyer-card .bnums { font-size: .75rem; color: #666; }
 
+    /* ── Payment tracker (admin only) ── */
+    .buyer-card .pay-check {
+      display: none;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    body.admin-mode .buyer-card .pay-check { display: flex; align-items: center; }
+    .buyer-card .pay-check input[type="checkbox"] {
+      width: 22px; height: 22px;
+      cursor: pointer;
+      accent-color: #2e7d32;
+    }
+    .buyer-card.paid {
+      background: linear-gradient(135deg, #e8f5e9, #c8e6c9) !important;
+      border-left: 4px solid #2e7d32;
+    }
+
     /* ── Toast ── */
     .toast {
       position: fixed;
@@ -664,6 +681,7 @@
     <div class="stat-card">🥚 Disponíveis: <span class="num" id="stat-avail">100</span></div>
     <div class="stat-card">✅ Vendidos: <span class="num" id="stat-sold">0</span></div>
     <div class="stat-card">👥 Participantes: <span class="num" id="stat-buyers">0</span></div>
+    <div class="stat-card" id="stat-pay-card" style="display:none">💰 Pagaram: <span class="num" id="stat-paid">0/0</span></div>
   </div>
 
   <!-- Number grid -->
@@ -788,16 +806,18 @@
     }
 
     // ── Firebase init ─────────────────────────────────────────────────────
-    let db, numbersRef, lockRef;
+    let db, numbersRef, lockRef, paymentsRef;
     if (isConfigured) {
       firebase.initializeApp(FIREBASE_CONFIG);
-      db         = firebase.database();
-      numbersRef = db.ref('numbers');
-      lockRef    = db.ref('lock');
+      db          = firebase.database();
+      numbersRef  = db.ref('numbers');
+      lockRef     = db.ref('lock');
+      paymentsRef = db.ref('payments');
     }
 
     // ── App state ─────────────────────────────────────────────────────────
     let state        = {}; // { [num]: { name, soldAt } }
+    let payments     = {}; // { [nameKey]: true } — admin payment tracking
     let currentLock  = null;
     let pendingNumber= null;
     let lockExpiryTimer = null;
@@ -980,7 +1000,11 @@
     // ── Buyers panel ──────────────────────────────────────────────────────
     function renderBuyers() {
       const entries = Object.entries(state);
-      if (entries.length === 0) { buyersSection.style.display = 'none'; return; }
+      if (entries.length === 0) {
+        buyersSection.style.display = 'none';
+        document.getElementById('stat-paid').textContent = '0/0';
+        return;
+      }
       buyersSection.style.display = '';
 
       const grouped = {};
@@ -993,15 +1017,25 @@
       const sorted = Object.values(grouped).sort((a, b) =>
         a.displayName.localeCompare(b.displayName, 'pt-BR', { sensitivity: 'base' }));
 
+      // Update payment stat counter
+      const paidCount = sorted.filter(b => !!payments[nameKey(b.displayName)]).length;
+      document.getElementById('stat-paid').textContent = `${paidCount}/${sorted.length}`;
+
       buyersGrid.innerHTML = sorted.map((b, i) => {
         const icon = eggIcons[i % eggIcons.length];
         const numsList = b.nums.sort((x, y) => x - y).join(', ');
-        return `<div class="buyer-card">
+        const key = nameKey(b.displayName);
+        const isPaid = !!payments[key];
+        return `<div class="buyer-card${isPaid ? ' paid' : ''}" data-pay-key="${escHtml(key)}">
           <span class="egg-icon">${icon}</span>
           <div class="buyer-info">
             <div class="bname" title="${escHtml(b.displayName)}">${escHtml(b.displayName)}</div>
             <div class="bnums">Nº ${escHtml(numsList)}</div>
-          </div></div>`;
+          </div>
+          <label class="pay-check" title="${isPaid ? 'Pago ✓' : 'Marcar como pago'}">
+            <input type="checkbox"${isPaid ? ' checked' : ''} />
+          </label>
+        </div>`;
       }).join('');
     }
 
@@ -1018,6 +1052,34 @@
     function escHtml(str) {
       return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+
+    function nameKey(name) {
+      // Produce a valid Firebase key from a participant name (no . # $ / [ ])
+      return name.toLowerCase().trim().replace(/[.#$\/\[\]]/g, '_');
+    }
+
+    // ── Payment checkbox handler ──────────────────────────────────────────
+    buyersGrid.addEventListener('change', async e => {
+      if (!adminMode) return;
+      const cb = e.target;
+      if (cb.type !== 'checkbox') return;
+      const card = cb.closest('[data-pay-key]');
+      if (!card || !paymentsRef) return;
+      const key = card.dataset.payKey;
+      cb.disabled = true;
+      try {
+        if (cb.checked) {
+          await paymentsRef.child(key).set(true);
+        } else {
+          await paymentsRef.child(key).remove();
+        }
+      } catch (err) {
+        console.error('payment update failed', err);
+        cb.checked = !cb.checked; // revert on error
+      }
+      cb.disabled = false;
+    });
+
     // ── Admin mode ────────────────────────────────────────────────────────────
     const ADMIN_PASSWORD = 'claudiaroberto';
     let adminMode = false;
@@ -1045,6 +1107,7 @@
         adminBtn.classList.remove('active');
         adminBtn.textContent = '🔒 Admin';
         document.body.classList.remove('admin-mode');
+        document.getElementById('stat-pay-card').style.display = 'none';
       } else {
         // Ask for password
         pwInput.value = '';
@@ -1070,6 +1133,7 @@
         adminBtn.classList.add('active');
         adminBtn.textContent = '🔓 Admin ON';
         document.body.classList.add('admin-mode');
+        document.getElementById('stat-pay-card').style.display = '';
         showToast('🔓 Modo admin activo — clica num número vendido para corrigir.');
       } else {
         pwError.textContent = '⚠️ Palavra-passe incorrecta.';
@@ -1161,6 +1225,12 @@
       lockRef.on('value', snapshot => {
         currentLock = snapshot.val();
         renderGrid();
+      });
+
+      // Payments: admin-only tracker, synced in real time
+      paymentsRef.on('value', snapshot => {
+        payments = snapshot.val() || {};
+        renderBuyers();
       });
     }
   </script>
