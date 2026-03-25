@@ -1,4 +1,4 @@
-# 🐣 Rifa de Páscoa
+﻿# 🐣 Rifa de Páscoa
 
 Aplicação web para gestão de uma rifa temática de Páscoa, acessível a qualquer pessoa através do browser, sem necessidade de instalação.
 
