@@ -133,27 +133,62 @@
       display: flex;
       align-items: flex-start;
       justify-content: center;
-      gap: 24px;
-      max-width: 960px;
+      gap: 0;
+      max-width: 980px;
       margin: 0 auto 30px;
-      flex-wrap: wrap;
     }
 
     .grid-wrapper {
       position: relative;
       z-index: 1;
-      flex: 1 1 560px;
+      flex: 0 0 auto;
       display: flex;
       justify-content: center;
       margin-bottom: 0;
+      padding-right: 24px;
+      border-right: 2px dashed rgba(123,79,46,.2);
     }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(10, 1fr);
       gap: 8px;
-      max-width: 560px;
-      width: 100%;
+      width: min(560px, 90vw);
+    }
+
+    .prizes-section {
+      position: relative;
+      z-index: 1;
+      flex: 0 0 220px;
+      min-width: 180px;
+      padding-left: 24px;
+      margin: 0;
+    }
+
+    /* Stack vertically on smaller screens */
+    @media (max-width: 820px) {
+      .main-layout {
+        flex-direction: column;
+        align-items: center;
+      }
+      .grid-wrapper {
+        padding-right: 0;
+        border-right: none;
+        border-bottom: 2px dashed rgba(123,79,46,.2);
+        padding-bottom: 20px;
+        width: 100%;
+      }
+      .prizes-section {
+        padding-left: 0;
+        padding-top: 16px;
+        flex: none;
+        width: 100%;
+        max-width: 560px;
+      }
+      .prizes-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     .cell {
@@ -408,12 +443,6 @@
     .price-tag strong { color: var(--brown); font-size: 1.1rem; }
 
     /* ── Prizes section ── */
-    .prizes-section {
-      position: relative;
-      z-index: 1;
-      flex: 0 0 200px;
-      margin: 0;
-    }
     .prizes-section h3 {
       text-align: center;
       font-size: 1.2rem;
