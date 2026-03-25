@@ -51,7 +51,29 @@ A aplicação utiliza o **Firebase Realtime Database** para sincronizar o estado
 
 ---
 
-## Estrutura do projeto
+## Modo Admin (correcção de números)
+
+Permite corrigir o nome de um comprador ou libertar um número já vendido.
+
+### Como activar
+
+1. Clica no botão **🔒 Admin** no canto inferior direito do ecrã.
+2. Introduz a palavra-passe de administrador.
+3. O botão passa a **🔓 Admin ON** — o modo está activo.
+
+### Corrigir um nome
+
+Com o modo admin activo, clica em qualquer número **vermelho** (vendido):
+- Edita o nome no campo e clica **✔ Guardar** para actualizar.
+- Clica **🗑️ Libertar número** para cancelar a venda e disponibilizar o número novamente.
+
+### Desactivar
+
+Clica novamente no botão **🔓 Admin ON** para sair do modo admin.
+
+> As alterações são sincronizadas em tempo real para todos os utilizadores.
+
+---
 
 ```
 rifa-pascoa/
