@@ -441,6 +441,46 @@
       padding-bottom: 20px;
     }
 
+    /* ── Admin button ── */
+    .admin-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 150;
+      background: rgba(123,79,46,.15);
+      border: 2px solid var(--brown);
+      color: var(--brown);
+      border-radius: 50px;
+      padding: 8px 18px;
+      font-size: .85rem;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: background .2s;
+    }
+    .admin-btn:hover { background: rgba(123,79,46,.3); }
+    .admin-btn.active {
+      background: var(--brown);
+      color: #fff;
+    }
+
+    /* ── Admin badge on bought cells ── */
+    body.admin-mode .cell.bought {
+      cursor: pointer !important;
+      outline: 3px dashed rgba(255,255,255,.7);
+      outline-offset: -3px;
+    }
+    body.admin-mode .cell.bought:hover {
+      transform: scale(1.12) translateY(-2px) !important;
+      filter: brightness(1.2);
+    }
+
+    /* ── Edit modal specifics ── */
+    .btn-delete {
+      background: linear-gradient(135deg, #757575, #212121);
+      color: #fff;
+    }
+
     /* ── Loading overlay ── */
     #loading-overlay {
       display: flex;
@@ -602,7 +642,39 @@
 
   <footer>Boa sorte a todos! 🐰🌸</footer>
 
-  <!-- Modal -->
+  <!-- Admin toggle button -->
+  <button class="admin-btn" id="admin-btn" title="Modo admin">🔒 Admin</button>
+
+  <!-- Password modal -->
+  <div class="overlay" id="pw-overlay">
+    <div class="modal">
+      <div class="modal-egg">🔐</div>
+      <h2>Acesso Admin</h2>
+      <p style="font-size:.9rem;color:#666;margin-bottom:12px">Introduz a palavra-passe para corrigir números.</p>
+      <input type="password" id="pw-input" placeholder="Palavra-passe" maxlength="30" autocomplete="off" />
+      <div class="modal-error" id="pw-error"></div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" id="pw-cancel">✖ Cancelar</button>
+        <button class="btn btn-confirm" id="pw-confirm">✔ Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit number modal -->
+  <div class="overlay" id="edit-overlay">
+    <div class="modal">
+      <div class="modal-egg">✏️</div>
+      <h2>Corrigir número</h2>
+      <div class="modal-num" id="edit-num">0</div>
+      <input type="text" id="edit-input" placeholder="Novo nome do comprador" maxlength="40" autocomplete="off" />
+      <div class="modal-error" id="edit-error"></div>
+      <div class="modal-actions" style="flex-wrap:wrap;gap:8px">
+        <button class="btn btn-delete" id="edit-delete" style="flex:1 1 100%">🗑️ Libertar número</button>
+        <button class="btn btn-cancel" id="edit-cancel">✖ Cancelar</button>
+        <button class="btn btn-confirm" id="edit-confirm">✔ Guardar</button>
+      </div>
+    </div>
+  </div>
   <div class="overlay" id="overlay">
     <div class="modal">
       <div class="modal-egg">🥚</div>
@@ -761,6 +833,7 @@
     gridEl.addEventListener('click', async e => {
       const cell = e.target.closest('.cell');
       if (!cell || cell.classList.contains('bought') || cell.classList.contains('locked')) return;
+      if (adminMode) return; // admin handles bought cells via capture listener
       const num = parseInt(cell.dataset.num, 10);
 
       if (currentLock && currentLock.clientId !== CLIENT_ID &&
@@ -908,7 +981,117 @@
     function escHtml(str) {
       return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+    // ── Admin mode ────────────────────────────────────────────────────────────
+    const ADMIN_PASSWORD = 'claudiaroberto';
+    let adminMode = false;
+    let editingNumber = null;
 
+    const adminBtn    = document.getElementById('admin-btn');
+    const pwOverlay   = document.getElementById('pw-overlay');
+    const pwInput     = document.getElementById('pw-input');
+    const pwError     = document.getElementById('pw-error');
+    const pwCancel    = document.getElementById('pw-cancel');
+    const pwConfirm   = document.getElementById('pw-confirm');
+    const editOverlay = document.getElementById('edit-overlay');
+    const editNum     = document.getElementById('edit-num');
+    const editInput   = document.getElementById('edit-input');
+    const editError   = document.getElementById('edit-error');
+    const editCancel  = document.getElementById('edit-cancel');
+    const editConfirm = document.getElementById('edit-confirm');
+    const editDelete  = document.getElementById('edit-delete');
+
+    // Toggle admin mode button
+    adminBtn.addEventListener('click', () => {
+      if (adminMode) {
+        // Deactivate
+        adminMode = false;
+        adminBtn.classList.remove('active');
+        adminBtn.textContent = '🔒 Admin';
+        document.body.classList.remove('admin-mode');
+      } else {
+        // Ask for password
+        pwInput.value = '';
+        pwError.textContent = '';
+        pwOverlay.classList.add('open');
+        setTimeout(() => pwInput.focus(), 100);
+      }
+    });
+
+    // Password modal
+    pwCancel.addEventListener('click', () => pwOverlay.classList.remove('open'));
+    pwOverlay.addEventListener('click', e => { if (e.target === pwOverlay) pwOverlay.classList.remove('open'); });
+    pwInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  checkPassword();
+      if (e.key === 'Escape') pwOverlay.classList.remove('open');
+    });
+    pwConfirm.addEventListener('click', checkPassword);
+
+    function checkPassword() {
+      if (pwInput.value === ADMIN_PASSWORD) {
+        pwOverlay.classList.remove('open');
+        adminMode = true;
+        adminBtn.classList.add('active');
+        adminBtn.textContent = '🔓 Admin ON';
+        document.body.classList.add('admin-mode');
+        showToast('🔓 Modo admin activo — clica num número vendido para corrigir.');
+      } else {
+        pwError.textContent = '⚠️ Palavra-passe incorrecta.';
+        pwInput.select();
+      }
+    }
+
+    // Intercept clicks on bought cells when in admin mode
+    gridEl.addEventListener('click', e => {
+      if (!adminMode) return;
+      const cell = e.target.closest('.cell.bought');
+      if (!cell) return;
+      editingNumber = parseInt(cell.dataset.num, 10);
+      editNum.textContent  = editingNumber;
+      editInput.value      = state[editingNumber]?.name || '';
+      editError.textContent = '';
+      editOverlay.classList.add('open');
+      setTimeout(() => { editInput.focus(); editInput.select(); }, 100);
+    }, true); // capture phase so it runs before the normal click handler
+
+    // Edit modal
+    editCancel.addEventListener('click', () => editOverlay.classList.remove('open'));
+    editOverlay.addEventListener('click', e => { if (e.target === editOverlay) editOverlay.classList.remove('open'); });
+    editInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  saveEdit();
+      if (e.key === 'Escape') editOverlay.classList.remove('open');
+    });
+    editConfirm.addEventListener('click', saveEdit);
+    editDelete.addEventListener('click', freeNumber);
+
+    async function saveEdit() {
+      const name = editInput.value.trim();
+      if (!name) { editError.textContent = '⚠️ Introduz um nome.'; editInput.focus(); return; }
+      if (name.length < 2) { editError.textContent = '⚠️ Nome muito curto.'; editInput.focus(); return; }
+      editConfirm.disabled = true;
+      try {
+        await db.ref(`numbers/${editingNumber}`).update({ name });
+        editOverlay.classList.remove('open');
+        showToast(`✅ Número ${editingNumber} corrigido para "${name}".`);
+      } catch (err) {
+        editError.textContent = '⚠️ Erro ao guardar. Tenta novamente.';
+        console.error(err);
+      }
+      editConfirm.disabled = false;
+    }
+
+    async function freeNumber() {
+      if (!confirm(`Libertar o número ${editingNumber}? Esta acção não pode ser desfeita.`)) return;
+      editDelete.disabled = true;
+      try {
+        await db.ref(`numbers/${editingNumber}`).remove();
+        editOverlay.classList.remove('open');
+        showToast(`🗑️ Número ${editingNumber} libertado com sucesso.`);
+      } catch (err) {
+        editError.textContent = '⚠️ Erro ao libertar. Tenta novamente.';
+        console.error(err);
+      }
+      editDelete.disabled = false;
+    }
     // ── Release lock on page leave ────────────────────────────────────────
     window.addEventListener('beforeunload', () => releaseLock());
 
