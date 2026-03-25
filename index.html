@@ -22,10 +22,20 @@
 
     body {
       font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: linear-gradient(135deg, #e8f5e9 0%, #fce4ec 40%, #f3e5f5 70%, #e3f2fd 100%);
+      background: url('bg.jpeg') center center / cover fixed;
       min-height: 100vh;
       padding: 20px;
       color: var(--dark);
+    }
+
+    /* Subtle overlay so content stays readable over the bg image */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,.55);
+      pointer-events: none;
+      z-index: 0;
     }
 
     /* ── Floating decorations ── */
@@ -73,6 +83,15 @@
       color: var(--brown);
       letter-spacing: 1px;
       text-shadow: 1px 2px 0 var(--pink);
+    }
+
+    .header-logo {
+      display: block;
+      margin: 0 auto 12px;
+      max-height: 110px;
+      max-width: 280px;
+      object-fit: contain;
+      filter: drop-shadow(0 3px 8px rgba(0,0,0,.18));
     }
 
     header p {
@@ -581,8 +600,9 @@
   <!-- Header -->
   <header>
     <div class="header-badge">
+      <img src="logo.jpeg" alt="Logo" class="header-logo" />
       <h1>🐣 Rifa de Páscoa 🐣</h1>
-      <p>Escolha seu(s) número(s) e concorra a prêmios incríveis!</p>
+      <p>Escolhe o(s) teu(s) número(s) e concorre a prémios incríveis!</p>
       <p class="price-tag">💶 Cada número: <strong>1 €</strong></p>
     </div>
   </header>
@@ -683,7 +703,7 @@
       <input
         type="text"
         id="buyer-input"
-        placeholder="Seu nome completo"
+        placeholder="O teu nome completo"
         maxlength="40"
         autocomplete="off"
       />
