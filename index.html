@@ -455,12 +455,38 @@
       font-size: 1.1rem;
       color: var(--brown);
       font-weight: 600;
+      text-align: center;
+      padding: 24px;
     }
     #loading-overlay .spin {
       font-size: 3rem;
       animation: spin 1.2s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    #loading-overlay .load-error {
+      display: none;
+      background: #fff3cd;
+      border: 2px solid #f0a500;
+      border-radius: 14px;
+      padding: 16px 22px;
+      max-width: 400px;
+      font-size: .95rem;
+      font-weight: 400;
+      color: #5a3a00;
+      line-height: 1.6;
+    }
+    #loading-overlay .load-error strong { display: block; font-size: 1.05rem; margin-bottom: 6px; }
+    #loading-overlay .retry-btn {
+      margin-top: 10px;
+      background: var(--brown);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 20px;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
 
     /* ── Setup banner ── */
     #setup-banner {
@@ -602,8 +628,14 @@
 
   <!-- Loading overlay -->
   <div id="loading-overlay">
-    <span class="spin">🥚</span>
-    A ligar à base de dados…
+    <span class="spin" id="loading-spin">🥚</span>
+    <span id="loading-msg">A ligar à base de dados…</span>
+    <div class="load-error" id="load-error">
+      <strong>⚠️ Não foi possível ligar à base de dados.</strong>
+      Verifica a tua ligação à internet e tenta novamente.<br>
+      Se o problema persistir, contacta a organização.
+      <br><button class="retry-btn" onclick="location.reload()">&#x21bb; Tentar novamente</button>
+    </div>
   </div>
 
   <!-- Setup guidance (shown only when Firebase is not configured) -->
@@ -881,14 +913,28 @@
     window.addEventListener('beforeunload', () => releaseLock());
 
     // ── Firebase real-time listeners & init ───────────────────────────────
+    function showLoadError() {
+      document.getElementById('loading-spin').style.display = 'none';
+      document.getElementById('loading-msg').style.display = 'none';
+      document.getElementById('load-error').style.display = 'block';
+    }
+
     if (isConfigured) {
       buildGrid();
 
+      // Timeout: if Firebase doesn't respond in 10 s, show error
+      const connectionTimeout = setTimeout(showLoadError, 10_000);
+
       // Numbers: full sync whenever any number is sold
       numbersRef.on('value', snapshot => {
+        clearTimeout(connectionTimeout);
         state = snapshot.val() || {};
         loadingEl.style.display = 'none';
         renderGrid();
+      }, () => {
+        // Permission denied or network error
+        clearTimeout(connectionTimeout);
+        showLoadError();
       });
 
       // Lock: any client acquiring/releasing the lock updates all screens instantly
