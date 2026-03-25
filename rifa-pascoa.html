@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🐣 Rifa de Páscoa</title>
+  <style>
+    /* ── Reset & Variables ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink:    #f4a7b9;
+      --yellow:  #f9e4a0;
+      --green:   #a8e6cf;
+      --lavender:#c9b8e8;
+      --blue:    #a8d8ea;
+      --cream:   #fdf6ec;
+      --brown:   #7b4f2e;
+      --dark:    #3a2a1a;
+      --shadow:  rgba(0,0,0,.15);
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: linear-gradient(135deg, #e8f5e9 0%, #fce4ec 40%, #f3e5f5 70%, #e3f2fd 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: var(--dark);
+    }
+
+    /* ── Floating decorations ── */
+    .deco {
+      position: fixed;
+      font-size: 2rem;
+      opacity: .18;
+      pointer-events: none;
+      animation: float 6s ease-in-out infinite;
+      z-index: 0;
+    }
+    .deco:nth-child(1)  { top:  5%; left:  3%; animation-delay: 0s;   }
+    .deco:nth-child(2)  { top: 15%; right: 5%; animation-delay: 1s;   }
+    .deco:nth-child(3)  { top: 40%; left:  1%; animation-delay: 2s;   }
+    .deco:nth-child(4)  { top: 60%; right: 2%; animation-delay: 0.5s; }
+    .deco:nth-child(5)  { top: 80%; left:  4%; animation-delay: 1.5s; }
+    .deco:nth-child(6)  { top: 90%; right: 6%; animation-delay: 2.5s; }
+    .deco:nth-child(7)  { top: 30%; right: 1%; animation-delay: 3s;   }
+    .deco:nth-child(8)  { top: 70%; left:  2%; animation-delay: 0.8s; }
+
+    @keyframes float {
+      0%,100% { transform: translateY(0)    rotate(0deg);   }
+      50%      { transform: translateY(-14px) rotate(10deg); }
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .header-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #fff9c4, #ffe4e1);
+      border: 3px solid var(--pink);
+      border-radius: 24px;
+      padding: 18px 36px;
+      box-shadow: 0 6px 24px var(--shadow);
+    }
+
+    header h1 {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      color: var(--brown);
+      letter-spacing: 1px;
+      text-shadow: 1px 2px 0 var(--pink);
+    }
+
+    header p {
+      margin-top: 6px;
+      font-size: 1rem;
+      color: #7b5e3a;
+    }
+
+    /* ── Stats bar ── */
+    .stats {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 10px 22px;
+      font-size: .95rem;
+      font-weight: 600;
+      box-shadow: 0 4px 12px var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-card span.num { font-size: 1.4rem; color: var(--brown); }
+
+    /* ── Grid ── */
+    .grid-wrapper {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 8px;
+      max-width: 680px;
+      width: 100%;
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: clamp(.65rem, 1.8vw, .9rem);
+      cursor: pointer;
+      border: 2.5px solid transparent;
+      transition: transform .18s, box-shadow .18s, filter .18s;
+      position: relative;
+      box-shadow: 0 3px 8px var(--shadow);
+      background: #fff;
+      user-select: none;
+    }
+
+    /* Available egg colors cycle */
+    .cell.available:nth-child(5n+1)  { background: linear-gradient(145deg, var(--pink),    #fff);    border-color: #e98fa8; }
+    .cell.available:nth-child(5n+2)  { background: linear-gradient(145deg, var(--yellow),  #fff);    border-color: #d4bb4a; }
+    .cell.available:nth-child(5n+3)  { background: linear-gradient(145deg, var(--green),   #fff);    border-color: #5dba8d; }
+    .cell.available:nth-child(5n+4)  { background: linear-gradient(145deg, var(--lavender),#fff);    border-color: #9b7dd4; }
+    .cell.available:nth-child(5n+0)  { background: linear-gradient(145deg, var(--blue),    #fff);    border-color: #5aabca; }
+
+    .cell.available:hover {
+      transform: scale(1.18) translateY(-3px);
+      box-shadow: 0 8px 20px var(--shadow);
+      z-index: 2;
+    }
+
+    /* Bought state */
+    .cell.bought {
+      background: linear-gradient(145deg, #4caf50, #2e7d32) !important;
+      border-color: #1b5e20 !important;
+      color: #fff;
+      cursor: default;
+    }
+
+    .cell.bought:hover { transform: none; box-shadow: 0 3px 8px var(--shadow); }
+
+    /* Locked state — being reserved by someone else right now */
+    .cell.locked {
+      background: linear-gradient(145deg, #ffe082, #ffb300) !important;
+      border-color: #e65100 !important;
+      color: #5d3c00;
+      cursor: not-allowed;
+      animation: pulse-lock 1.2s ease-in-out infinite;
+    }
+    .cell.locked:hover { transform: none; box-shadow: 0 3px 8px var(--shadow); }
+    @keyframes pulse-lock {
+      0%,100% { opacity: 1; }
+      50%      { opacity: .6; }
+    }
+
+    .cell .num-label  { line-height: 1; }
+    .cell .buyer-name {
+      font-size: .5rem;
+      font-weight: 400;
+      max-width: 90%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      opacity: .85;
+      margin-top: 2px;
+    }
+
+    /* ── Modal ── */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(60,30,10,.45);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: linear-gradient(160deg, #fff9f0, #fce4ec);
+      border-radius: 24px;
+      padding: 36px 40px;
+      max-width: 380px;
+      width: 90%;
+      box-shadow: 0 16px 48px rgba(0,0,0,.3);
+      text-align: center;
+      animation: popIn .25s cubic-bezier(.34,1.56,.64,1);
+      position: relative;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(.7); opacity: 0; }
+      to   { transform: scale(1);  opacity: 1; }
+    }
+
+    .modal-egg {
+      font-size: 3.5rem;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .modal h2 {
+      color: var(--brown);
+      font-size: 1.35rem;
+      margin-bottom: 4px;
+    }
+
+    .modal .modal-num {
+      display: inline-block;
+      background: var(--yellow);
+      border-radius: 50%;
+      width: 52px; height: 52px;
+      line-height: 52px;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--brown);
+      margin: 10px auto 16px;
+      box-shadow: 0 3px 8px var(--shadow);
+    }
+
+    .modal input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--pink);
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+      background: #fff;
+      color: var(--dark);
+      transition: border-color .2s;
+    }
+
+    .modal input:focus { border-color: #9b7dd4; }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s, opacity .15s;
+    }
+    .btn:hover { transform: translateY(-2px); opacity: .9; }
+    .btn:active { transform: scale(.97); }
+
+    .btn-confirm {
+      background: linear-gradient(135deg, #66bb6a, #2e7d32);
+      color: #fff;
+    }
+
+    .btn-cancel {
+      background: linear-gradient(135deg, #ef9a9a, #c62828);
+      color: #fff;
+    }
+
+    .modal-error {
+      color: #c62828;
+      font-size: .85rem;
+      margin-top: 6px;
+      min-height: 20px;
+    }
+
+    /* ── Buyers list panel ── */
+    .buyers-section {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      margin: 0 auto 40px;
+    }
+
+    .buyers-section h3 {
+      text-align: center;
+      font-size: 1.2rem;
+      color: var(--brown);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .buyers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+    }
+
+    .buyer-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 10px 14px;
+      box-shadow: 0 3px 10px var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: .9rem;
+    }
+
+    .buyer-card .egg-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .buyer-card .buyer-info { overflow: hidden; }
+    .buyer-card .bname {
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .buyer-card .bnums { font-size: .75rem; color: #666; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: linear-gradient(135deg, #2e7d32, #66bb6a);
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+      z-index: 200;
+      transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+      pointer-events: none;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── Price tag ── */
+    .price-tag {
+      margin-top: 10px;
+      font-size: 1.05rem;
+      color: #5a3a1a;
+      background: linear-gradient(135deg, #fff9c4, #ffd6e0);
+      display: inline-block;
+      padding: 4px 18px;
+      border-radius: 50px;
+      border: 1.5px solid var(--pink);
+    }
+    .price-tag strong { color: var(--brown); font-size: 1.1rem; }
+
+    /* ── Prizes section ── */
+    .prizes-section {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      margin: 0 auto 30px;
+    }
+    .prizes-section h3 {
+      text-align: center;
+      font-size: 1.2rem;
+      color: var(--brown);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .prizes-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 600px) {
+      .prizes-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .prize-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px 18px;
+      box-shadow: 0 4px 14px var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-left: 5px solid var(--pink);
+      transition: transform .18s;
+    }
+    .prize-card:hover { transform: translateY(-3px); }
+    .prize-card:nth-child(1) { border-color: #f9c74f; }
+    .prize-card:nth-child(2) { border-color: #90e0ef; }
+    .prize-card:nth-child(3) { border-color: #a8e6cf; }
+    .prize-card:nth-child(4) { border-color: var(--lavender); }
+    .prize-icon { font-size: 2rem; flex-shrink: 0; }
+    .prize-info .prize-place {
+      font-size: .75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: #888;
+    }
+    .prize-info .prize-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    /* ── Footer ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      font-size: .8rem;
+      color: #9e7952;
+      padding-bottom: 20px;
+    }
+
+    /* ── Loading overlay ── */
+    #loading-overlay {
+      display: flex;
+      position: fixed;
+      inset: 0;
+      background: rgba(255,249,240,.92);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      font-size: 1.1rem;
+      color: var(--brown);
+      font-weight: 600;
+    }
+    #loading-overlay .spin {
+      font-size: 3rem;
+      animation: spin 1.2s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Setup banner ── */
+    #setup-banner {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(60,30,10,.7);
+      z-index: 400;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #setup-banner .setup-box {
+      background: #fff9f0;
+      border-radius: 20px;
+      padding: 32px 36px;
+      max-width: 520px;
+      width: 100%;
+      box-shadow: 0 16px 48px rgba(0,0,0,.35);
+    }
+    #setup-banner h2 { color: var(--brown); margin-bottom: 12px; }
+    #setup-banner ol { padding-left: 20px; line-height: 2; font-size: .95rem; color: #444; }
+    #setup-banner code {
+      background: #f0e6d3; border-radius: 4px;
+      padding: 1px 6px; font-size: .88rem;
+    }
+
+    /* ── Responsive tweaks ── */
+    @media (max-width: 480px) {
+      .grid { gap: 5px; }
+      .cell { font-size: .6rem; }
+      .modal { padding: 28px 22px; }
+    }
+  </style>
+
+  <!-- Firebase SDK (compat mode — works directly in a single HTML file) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+</head>
+<body>
+
+  <!-- Floating Easter decorations -->
+  <div class="deco">🐰</div>
+  <div class="deco">🥚</div>
+  <div class="deco">🌸</div>
+  <div class="deco">🐣</div>
+  <div class="deco">🌷</div>
+  <div class="deco">🍫</div>
+  <div class="deco">🌼</div>
+  <div class="deco">🐇</div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-badge">
+      <h1>🐣 Rifa de Páscoa 🐣</h1>
+      <p>Escolha seu(s) número(s) e concorra a prêmios incríveis!</p>
+      <p class="price-tag">💶 Cada número: <strong>1 €</strong></p>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">🥚 Disponíveis: <span class="num" id="stat-avail">100</span></div>
+    <div class="stat-card">✅ Vendidos: <span class="num" id="stat-sold">0</span></div>
+    <div class="stat-card">👥 Participantes: <span class="num" id="stat-buyers">0</span></div>
+  </div>
+
+  <!-- Number grid -->
+  <div class="grid-wrapper">
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <!-- Prizes -->
+  <div class="prizes-section">
+    <h3>🏆 Prémios</h3>
+    <div class="prizes-grid">
+      <div class="prize-card">
+        <span class="prize-icon">👕</span>
+        <div class="prize-info">
+          <div class="prize-place">1º Prémio</div>
+          <div class="prize-name">T-Shirt Personalizada</div>
+        </div>
+      </div>
+      <div class="prize-card">
+        <span class="prize-icon">🛍️</span>
+        <div class="prize-info">
+          <div class="prize-place">2º Prémio</div>
+          <div class="prize-name">Tote Bag</div>
+        </div>
+      </div>
+      <div class="prize-card">
+        <span class="prize-icon">🕯️</span>
+        <div class="prize-info">
+          <div class="prize-place">3º Prémio</div>
+          <div class="prize-name">Kit Vela + Gesso Perfumado</div>
+        </div>
+      </div>
+      <div class="prize-card">
+        <span class="prize-icon">🎀</span>
+        <div class="prize-info">
+          <div class="prize-place">4º Prémio</div>
+          <div class="prize-name">Porta-Chaves Laço</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buyers list -->
+  <div class="buyers-section" id="buyers-section" style="display:none">
+    <h3>🎉 Participantes</h3>
+    <div class="buyers-grid" id="buyers-grid"></div>
+  </div>
+
+  <footer>Boa sorte a todos! 🐰🌸</footer>
+
+  <!-- Modal -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-egg">🥚</div>
+      <h2>Reservar número</h2>
+      <div class="modal-num" id="modal-num">0</div>
+      <input
+        type="text"
+        id="buyer-input"
+        placeholder="Seu nome completo"
+        maxlength="40"
+        autocomplete="off"
+      />
+      <div class="modal-error" id="modal-error"></div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel"  id="btn-cancel">✖ Cancelar</button>
+        <button class="btn btn-confirm" id="btn-confirm">✔ Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <span class="spin">🥚</span>
+    A ligar à base de dados…
+  </div>
+
+  <!-- Setup guidance (shown only when Firebase is not configured) -->
+  <div id="setup-banner">
+    <div class="setup-box">
+      <h2>⚙️ Configuração Firebase necessária</h2>
+      <p style="margin-bottom:12px;color:#555">Para funcionar online, a rifa usa o Firebase Realtime Database.<br>Segue os passos:</p>
+      <ol>
+        <li>Vai a <strong>console.firebase.google.com</strong> e cria um projeto.</li>
+        <li>Clica em <strong>Realtime Database → Criar base de dados → Modo de teste</strong>.</li>
+        <li>Em <strong>Definições do projeto → As tuas apps</strong>, adiciona uma Web App e copia o objeto <code>firebaseConfig</code>.</li>
+        <li>Abre o ficheiro <code>rifa-pascoa.html</code> e substitui os valores no bloco <strong>FIREBASE CONFIG</strong> no início do script.</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    // ════════════════════════════════════════════════════════════════════
+    //  FIREBASE CONFIG  ← substitui com os dados do teu projeto Firebase
+    //  console.firebase.google.com → Definições → As tuas apps → SDK
+    // ════════════════════════════════════════════════════════════════════
+    const FIREBASE_CONFIG = {
+      apiKey:            "PASTE_YOUR_API_KEY",
+      authDomain:        "PASTE_YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL:       "https://PASTE_YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+      projectId:         "PASTE_YOUR_PROJECT_ID",
+      storageBucket:     "PASTE_YOUR_PROJECT_ID.firebasestorage.app",
+      messagingSenderId: "PASTE_YOUR_SENDER_ID",
+      appId:             "PASTE_YOUR_APP_ID"
+    };
+    // ════════════════════════════════════════════════════════════════════
+    const LOCK_TTL  = 30_000; // ms — lock auto-expires if modal is abandoned
+    const CLIENT_ID = Math.random().toString(36).slice(2); // unique per tab/browser
+
+    // ── Detect unconfigured Firebase ──────────────────────────────────────
+    const isConfigured = !FIREBASE_CONFIG.apiKey.startsWith('PASTE_');
+    if (!isConfigured) {
+      document.getElementById('loading-overlay').style.display = 'none';
+      document.getElementById('setup-banner').style.display = 'flex';
+    }
+
+    // ── Firebase init ─────────────────────────────────────────────────────
+    let db, numbersRef, lockRef;
+    if (isConfigured) {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      db         = firebase.database();
+      numbersRef = db.ref('numbers');
+      lockRef    = db.ref('lock');
+    }
+
+    // ── App state ─────────────────────────────────────────────────────────
+    let state        = {}; // { [num]: { name, soldAt } }
+    let currentLock  = null;
+    let pendingNumber= null;
+    let lockExpiryTimer = null;
+
+    // ── DOM refs ──────────────────────────────────────────────────────────
+    const gridEl        = document.getElementById('grid');
+    const overlay       = document.getElementById('overlay');
+    const modalNum      = document.getElementById('modal-num');
+    const buyerInput    = document.getElementById('buyer-input');
+    const modalError    = document.getElementById('modal-error');
+    const btnConfirm    = document.getElementById('btn-confirm');
+    const btnCancel     = document.getElementById('btn-cancel');
+    const toastEl       = document.getElementById('toast');
+    const statAvail     = document.getElementById('stat-avail');
+    const statSold      = document.getElementById('stat-sold');
+    const statBuyers    = document.getElementById('stat-buyers');
+    const buyersSection = document.getElementById('buyers-section');
+    const buyersGrid    = document.getElementById('buyers-grid');
+    const loadingEl     = document.getElementById('loading-overlay');
+
+    const eggIcons = ['🥚','🐣','🐰','🌸','🌷','🌼','🍫','🎀','🐇','✨'];
+
+    // ── Build grid (once) ─────────────────────────────────────────────────
+    function buildGrid() {
+      gridEl.innerHTML = '';
+      for (let i = 1; i <= 100; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.num = i;
+        gridEl.appendChild(cell);
+      }
+    }
+
+    // ── Render grid from current state ────────────────────────────────────
+    function renderGrid() {
+      const cells = gridEl.querySelectorAll('.cell');
+      const lockedNum = (currentLock &&
+                         currentLock.clientId !== CLIENT_ID &&
+                         (Date.now() - currentLock.lockedAt) < LOCK_TTL)
+                        ? currentLock.num : null;
+      let sold = 0;
+
+      cells.forEach(cell => {
+        const n = parseInt(cell.dataset.num, 10);
+        const entry = state[n];
+        if (entry) {
+          sold++;
+          cell.className = 'cell bought';
+          cell.innerHTML = `<span class="num-label">${n}</span><span class="buyer-name">${escHtml(entry.name)}</span>`;
+          cell.title = `Número ${n} — ${entry.name}`;
+        } else if (n === lockedNum) {
+          cell.className = 'cell locked';
+          cell.innerHTML = `<span class="num-label">${n}</span><span class="buyer-name">⏳</span>`;
+          cell.title = `Número ${n} — a ser reservado…`;
+        } else {
+          cell.className = 'cell available';
+          cell.innerHTML = `<span class="num-label">${n}</span>`;
+          cell.title = `Número ${n} — disponível`;
+        }
+      });
+
+      const uniqueBuyers = new Set(Object.values(state).map(e => e.name.toLowerCase().trim())).size;
+      statSold.textContent   = sold;
+      statAvail.textContent  = 100 - sold;
+      statBuyers.textContent = uniqueBuyers;
+      renderBuyers();
+    }
+
+    // ── Grid click ────────────────────────────────────────────────────────
+    gridEl.addEventListener('click', async e => {
+      const cell = e.target.closest('.cell');
+      if (!cell || cell.classList.contains('bought') || cell.classList.contains('locked')) return;
+      const num = parseInt(cell.dataset.num, 10);
+
+      if (currentLock && currentLock.clientId !== CLIENT_ID &&
+          currentLock.num === num && (Date.now() - currentLock.lockedAt) < LOCK_TTL) {
+        showToast('⏳ Este número está a ser reservado por outra pessoa. Tente daqui a pouco!');
+        return;
+      }
+
+      const acquired = await acquireLock(num);
+      if (!acquired) {
+        showToast('⏳ Este número está a ser reservado por outra pessoa. Tente daqui a pouco!');
+        return;
+      }
+      pendingNumber = num;
+      openModal(num);
+    });
+
+    // ── Lock helpers (Firebase transactions = atomic across all devices) ───
+    async function acquireLock(num) {
+      let acquired = false;
+      try {
+        await lockRef.transaction(existing => {
+          const now = Date.now();
+          if (existing && existing.clientId !== CLIENT_ID &&
+              (now - existing.lockedAt) < LOCK_TTL) {
+            return; // Abort — someone else holds the lock
+          }
+          acquired = true;
+          return { num, clientId: CLIENT_ID, lockedAt: now };
+        });
+      } catch (err) { console.error('acquireLock failed', err); }
+      return acquired;
+    }
+
+    function releaseLock() {
+      if (!lockRef) return;
+      lockRef.transaction(existing => {
+        if (existing && existing.clientId === CLIENT_ID) return null;
+        return existing;
+      }).catch(() => {});
+    }
+
+    // ── Modal ─────────────────────────────────────────────────────────────
+    function openModal(num) {
+      clearTimeout(lockExpiryTimer);
+      lockExpiryTimer = setTimeout(() => { releaseLock(); closeModal(); }, LOCK_TTL);
+      modalNum.textContent   = num;
+      buyerInput.value       = '';
+      modalError.textContent = '';
+      overlay.classList.add('open');
+      setTimeout(() => buyerInput.focus(), 100);
+    }
+
+    function closeModal() {
+      clearTimeout(lockExpiryTimer);
+      releaseLock();
+      overlay.classList.remove('open');
+      pendingNumber = null;
+    }
+
+    btnCancel.addEventListener('click', closeModal);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+    buyerInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  confirmPurchase();
+      if (e.key === 'Escape') closeModal();
+    });
+    btnConfirm.addEventListener('click', confirmPurchase);
+
+    // ── Confirm purchase (atomic Firebase transaction) ─────────────────────
+    async function confirmPurchase() {
+      const name = buyerInput.value.trim();
+      if (!name) {
+        modalError.textContent = '⚠️ Por favor, informe o seu nome.';
+        buyerInput.focus(); return;
+      }
+      if (name.length < 2) {
+        modalError.textContent = '⚠️ Nome muito curto.';
+        buyerInput.focus(); return;
+      }
+
+      btnConfirm.disabled = true;
+      btnConfirm.textContent = '…';
+
+      let success = false;
+      try {
+        const numRef = db.ref(`numbers/${pendingNumber}`);
+        await numRef.transaction(existing => {
+          if (existing !== null) return; // Already sold — abort
+          success = true;
+          return { name, soldAt: firebase.database.ServerValue.TIMESTAMP };
+        });
+      } catch (err) { console.error('confirmPurchase failed', err); }
+
+      btnConfirm.disabled = false;
+      btnConfirm.textContent = '✔ Confirmar';
+
+      if (!success) {
+        modalError.textContent = '⚠️ Este número já foi vendido!';
+        releaseLock();
+        return;
+      }
+      const numCopy = pendingNumber;
+      closeModal();
+      showToast(`🎉 Número ${numCopy} reservado para ${name}!`);
+    }
+
+    // ── Buyers panel ──────────────────────────────────────────────────────
+    function renderBuyers() {
+      const entries = Object.entries(state);
+      if (entries.length === 0) { buyersSection.style.display = 'none'; return; }
+      buyersSection.style.display = '';
+
+      const grouped = {};
+      entries.forEach(([num, { name }]) => {
+        const key = name.toLowerCase().trim();
+        if (!grouped[key]) grouped[key] = { displayName: name, nums: [] };
+        grouped[key].nums.push(parseInt(num, 10));
+      });
+
+      const sorted = Object.values(grouped).sort((a, b) =>
+        a.displayName.localeCompare(b.displayName, 'pt-BR', { sensitivity: 'base' }));
+
+      buyersGrid.innerHTML = sorted.map((b, i) => {
+        const icon = eggIcons[i % eggIcons.length];
+        const numsList = b.nums.sort((x, y) => x - y).join(', ');
+        return `<div class="buyer-card">
+          <span class="egg-icon">${icon}</span>
+          <div class="buyer-info">
+            <div class="bname" title="${escHtml(b.displayName)}">${escHtml(b.displayName)}</div>
+            <div class="bnums">Nº ${escHtml(numsList)}</div>
+          </div></div>`;
+      }).join('');
+    }
+
+    // ── Toast ─────────────────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3200);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+    function escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Release lock on page leave ────────────────────────────────────────
+    window.addEventListener('beforeunload', () => releaseLock());
+
+    // ── Firebase real-time listeners & init ───────────────────────────────
+    if (isConfigured) {
+      buildGrid();
+
+      // Numbers: full sync whenever any number is sold
+      numbersRef.on('value', snapshot => {
+        state = snapshot.val() || {};
+        loadingEl.style.display = 'none';
+        renderGrid();
+      });
+
+      // Lock: any client acquiring/releasing the lock updates all screens instantly
+      lockRef.on('value', snapshot => {
+        currentLock = snapshot.val();
+        renderGrid();
+      });
+    }
+  </script>
+</body>
+</html>
