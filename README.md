@@ -36,7 +36,7 @@ Aplicação web para gestão de uma rifa temática de Páscoa, acessível a qual
 |-----|-------------|
 | 🔵🟣🟡🟢🩷 (colorido) | Número disponível — clica para reservar |
 | 🟡⏳ (amarelo pulsante) | Número a ser reservado por outra pessoa neste momento |
-| 🟢 (verde) | Número já vendido |
+| � (vermelho) | Número já vendido |
 
 ---
 
