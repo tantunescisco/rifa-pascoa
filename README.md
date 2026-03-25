@@ -1,4 +1,4 @@
-﻿# 🐣 Rifa de Páscoa
+# 🐣 Rifa de Páscoa
 
 Aplicação web para gestão de uma rifa temática de Páscoa, acessível a qualquer pessoa através do browser, sem necessidade de instalação.
 
@@ -36,7 +36,7 @@ Aplicação web para gestão de uma rifa temática de Páscoa, acessível a qual
 |-----|-------------|
 | 🔵🟣🟡🟢🩷 (colorido) | Número disponível — clica para reservar |
 | 🟡⏳ (amarelo pulsante) | Número a ser reservado por outra pessoa neste momento |
-| � (vermelho) | Número já vendido |
+| 🔴 (vermelho) | Número já vendido |
 
 ---
 
