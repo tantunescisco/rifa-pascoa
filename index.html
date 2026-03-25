@@ -126,69 +126,21 @@
     .stat-card span.num { font-size: 1.4rem; color: var(--brown); }
 
     /* ── Grid ── */
-    /* ── Main layout: grid + prizes side by side ── */
-    .main-layout {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      gap: 0;
-      max-width: 980px;
-      margin: 0 auto 30px;
-    }
-
+    /* ── Grid wrapper ── */
     .grid-wrapper {
       position: relative;
       z-index: 1;
-      flex: 0 0 auto;
       display: flex;
       justify-content: center;
-      margin-bottom: 0;
-      padding-right: 24px;
-      border-right: 2px dashed rgba(123,79,46,.2);
+      margin-bottom: 30px;
     }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(10, 1fr);
       gap: 8px;
-      width: min(560px, 90vw);
-    }
-
-    .prizes-section {
-      position: relative;
-      z-index: 1;
-      flex: 0 0 220px;
-      min-width: 180px;
-      padding-left: 24px;
-      margin: 0;
-    }
-
-    /* Stack vertically on smaller screens */
-    @media (max-width: 820px) {
-      .main-layout {
-        flex-direction: column;
-        align-items: center;
-      }
-      .grid-wrapper {
-        padding-right: 0;
-        border-right: none;
-        border-bottom: 2px dashed rgba(123,79,46,.2);
-        padding-bottom: 20px;
-        width: 100%;
-      }
-      .prizes-section {
-        padding-left: 0;
-        padding-top: 16px;
-        flex: none;
-        width: 100%;
-        max-width: 560px;
-      }
-      .prizes-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-      }
+      max-width: 680px;
+      width: 100%;
     }
 
     .cell {
@@ -443,6 +395,13 @@
     .price-tag strong { color: var(--brown); font-size: 1.1rem; }
 
     /* ── Prizes section ── */
+    /* ── Prizes section ── */
+    .prizes-section {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      margin: 0 auto 30px;
+    }
     .prizes-section h3 {
       text-align: center;
       font-size: 1.2rem;
@@ -454,9 +413,12 @@
       gap: 8px;
     }
     .prizes-grid {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       gap: 12px;
+    }
+    @media (max-width: 600px) {
+      .prizes-grid { grid-template-columns: repeat(2, 1fr); }
     }
     .prize-card {
       background: #fff;
@@ -652,43 +614,41 @@
     <div class="stat-card">👥 Participantes: <span class="num" id="stat-buyers">0</span></div>
   </div>
 
-  <!-- Number grid + Prizes side by side -->
-  <div class="main-layout">
-    <div class="grid-wrapper">
-      <div class="grid" id="grid"></div>
-    </div>
+  <!-- Number grid -->
+  <div class="grid-wrapper">
+    <div class="grid" id="grid"></div>
+  </div>
 
-    <!-- Prizes -->
-    <div class="prizes-section">
-      <h3>🏆 Prémios</h3>
-      <div class="prizes-grid">
-        <div class="prize-card">
-          <span class="prize-icon">👕</span>
-          <div class="prize-info">
-            <div class="prize-place">1º Prémio</div>
-            <div class="prize-name">T-Shirt Personalizada</div>
-          </div>
+  <!-- Prizes -->
+  <div class="prizes-section">
+    <h3>🏆 Prémios</h3>
+    <div class="prizes-grid">
+      <div class="prize-card">
+        <span class="prize-icon">👕</span>
+        <div class="prize-info">
+          <div class="prize-place">1º Prémio</div>
+          <div class="prize-name">T-Shirt Personalizada</div>
         </div>
-        <div class="prize-card">
-          <span class="prize-icon">🛍️</span>
-          <div class="prize-info">
-            <div class="prize-place">2º Prémio</div>
-            <div class="prize-name">Tote Bag</div>
-          </div>
+      </div>
+      <div class="prize-card">
+        <span class="prize-icon">🛍️</span>
+        <div class="prize-info">
+          <div class="prize-place">2º Prémio</div>
+          <div class="prize-name">Tote Bag</div>
         </div>
-        <div class="prize-card">
-          <span class="prize-icon">🕯️</span>
-          <div class="prize-info">
-            <div class="prize-place">3º Prémio</div>
-            <div class="prize-name">Kit Vela + Gesso Perfumado</div>
-          </div>
+      </div>
+      <div class="prize-card">
+        <span class="prize-icon">🕯️</span>
+        <div class="prize-info">
+          <div class="prize-place">3º Prémio</div>
+          <div class="prize-name">Kit Vela + Gesso Perfumado</div>
         </div>
-        <div class="prize-card">
-          <span class="prize-icon">🎀</span>
-          <div class="prize-info">
-            <div class="prize-place">4º Prémio</div>
-            <div class="prize-name">Porta-Chaves Laço</div>
-          </div>
+      </div>
+      <div class="prize-card">
+        <span class="prize-icon">🎀</span>
+        <div class="prize-info">
+          <div class="prize-place">4º Prémio</div>
+          <div class="prize-name">Porta-Chaves Laço</div>
         </div>
       </div>
     </div>
